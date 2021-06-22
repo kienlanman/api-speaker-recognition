@@ -2,6 +2,7 @@ from flask import jsonify, request
 from config import client
 from app import app
 from bson.objectid import ObjectId
+import os
 
 from src.model.densenet import DenseNet201, DenseNet121, DenseNet169
 from src.service.TransferAudio import compareTwoVoice, convertBase64CafToWav, predictEmbedding
@@ -18,7 +19,7 @@ def search_voice_info():
     # Select the collection
     collection = client['mongodb'].voice
     output = [];
-    for p in collection.find(formSearch):
+    for p in collection.find(formSearch).sort("_id", -1) :
         output.append({"objectId": str(p["_id"]), "name": p['name'], "voice": p['voice']});
     return jsonify(output);
 
@@ -60,6 +61,12 @@ def updateVoice():
 @app.route('/voice/delete/<id>', methods=['DELETE'])
 def deleteVoice(id):
     collection = client['mongodb'].voice
+    # xoa file npy
+    try:
+        os.remove("sample-npy/"+id+".npy")
+    except Exception:
+        pass
+    # xoa file tren db
     try:
      collection.delete_one({'_id': ObjectId(id)});
      return ("Delete success");
@@ -67,8 +74,10 @@ def deleteVoice(id):
         return ("An exception occurred")
 
 global model
-checkpoint_densenet = "C:/Users/kienv/PycharmProjects/pro-api-speaker/src/check_point/densenet121_model178000_0.08254.h5"
-model = DenseNet121(input_shape=(160, 64, 1) ,weights=checkpoint_densenet, include_top=False, classes=512, pooling='avg');
+#checkpoint_densenet = "C:/Users/kienv/PycharmProjects/pro-api-speaker/src/check_point/densenet121_model178000_0.08254.h5"
+#checkpoint_densenet = "C:/Users/kienv/PycharmProjects/pro-api-speaker/src/check_point/model_229800_1.14093.h5"
+checkpoint_densenet = "C:/Users/kienv/PycharmProjects/pro-api-speaker/src/check_point/densenet169_model_131800_3.15211.h5"
+model = DenseNet169(input_shape=(160, 64, 1) ,weights=checkpoint_densenet, include_top=False, classes=512, pooling='avg');
 
 @app.route('/voice/send-voice', methods=['POST'])
 def sendVoice():

@@ -54,4 +54,4 @@ COMBINE_MODEL = False
 RESULT_FILE = "res/results.csv"
 SUBMIT_FILE = "res/submit.csv"
 
-THRESHOLD = 0.6
+THRESHOLD = 0.601
